@@ -67,7 +67,7 @@ def click_and_retrieve(driver, save_path, index, img, img_list_length):
             
             if not _format:
                 headers = {"User-Agent": "Mozilla/5.0"}
-                response = requests.get(src, headers=headers)
+                response = requests.get(src, headers=headers, timeout=5)
                 if response.status_code == 200:
                     _format = "png"
                 else:
@@ -92,7 +92,7 @@ def click_and_retrieve(driver, save_path, index, img, img_list_length):
         else:
             try:
                 headers = {"User-Agent": "Mozilla/5.0"}
-                response = requests.get(src, headers=headers)
+                response = requests.get(src, headers=headers, timeout=5)
                 
                 if response.status_code == 200:
                     with open(f"image/{save_path}/{timestamp}_{crawled_count + 1}.{_format}", "wb") as f:
