@@ -29,6 +29,7 @@ crawled_count = 0
 # 현재 날짜와 시간을 파일명에 사용
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+
 def scroll_down(driver):
     print("ㅡ 스크롤 다운 시작 ㅡ")
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -42,6 +43,7 @@ def scroll_down(driver):
             driver.execute_script("window.scrollTo(0, 0);")
             break
         last_height = new_height
+
 
 def click_and_retrieve(driver, save_path, index, img, img_list_length):
     global crawled_count
@@ -81,11 +83,11 @@ def click_and_retrieve(driver, save_path, index, img, img_list_length):
             print(f"Error while retrieving src: {e}")
             return
 
-        os.makedirs(f"image/{save_path}", exist_ok=True)
+        os.makedirs(f"images/{save_path}", exist_ok=True)
         
         if src.startswith("data:image"):
             base64_data = src.split(",")[1]
-            with open(f"image/{save_path}/{timestamp}_{crawled_count + 1}.{_format}", "wb") as f:
+            with open(f"images/{save_path}/{timestamp}_{crawled_count + 1}.{_format}", "wb") as f:
                 f.write(base64.b64decode(base64_data))
             print(f"{index + 1} / {img_list_length} 번째 사진 저장 (Base64 형식)")
             crawled_count += 1
@@ -95,7 +97,7 @@ def click_and_retrieve(driver, save_path, index, img, img_list_length):
                 response = requests.get(src, headers=headers, timeout=5)
                 
                 if response.status_code == 200:
-                    with open(f"image/{save_path}/{timestamp}_{crawled_count + 1}.{_format}", "wb") as f:
+                    with open(f"images/{save_path}/{timestamp}_{crawled_count + 1}.{_format}", "wb") as f:
                         f.write(response.content)
                     print(f"{index + 1} / {img_list_length} 번째 사진 저장 (URL 형식)")
                     crawled_count += 1
@@ -125,7 +127,7 @@ def crawling(driver, query, save_path):
     img_list = div.find_elements(By.CSS_SELECTOR, ".F0uyec")
     print(len(img_list))
 
-    os.makedirs(f'image/{save_path}', exist_ok=True)
+    os.makedirs(f'images/{save_path}', exist_ok=True)
     print(f"ㅡ {save_path} 생성 ㅡ")
 
     current_img = img_list[0].find_element(By.CSS_SELECTOR, "img.YQ4gaf")
