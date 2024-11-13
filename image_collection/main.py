@@ -1,9 +1,9 @@
 import argparse
 from selenium import webdriver
-from image_collection.aquarium_crawling import crawling
+from aquarium_crawling import crawling
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
-from image_collection.remove_duplicate_image import delete_image_from_path
+from remove_duplicate_image import delete_image_from_path
 from image_preprocessing import filtering
 import json
 import time
