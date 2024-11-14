@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name="model_training",
     version="0.1",
-    packages=find_packages("src"),  # src 디렉터리를 기준으로 패키지 탐색
-    package_dir={"": "src"},        # src 디렉터리를 루트로 인식
+    packages=find_packages("src"),  
+    package_dir={"": "src"},       
     install_requires=[
         "numpy>=1.23.0",
         "matplotlib>=3.3.0",
@@ -24,7 +24,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'model_training=main:main',  # main.py의 main() 함수를 실행하는 엔트리 포인트
+            'model_training=main:main', 
         ]
     },
 )
