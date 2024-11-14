@@ -18,7 +18,7 @@ def main():
     parser.add_argument('--data', type=str, help="Path to the dataset configuration file")
     parser.add_argument('--imgsz', type=int, help="Image size for training and validation")
     parser.add_argument('--epochs', type=int, default=100, help="Number of epochs for training")
-    parser.add_argument('--batch', type=int, default=16, help="Batch size for training")
+    parser.add_argument('--batch', type=float, default=16, help="Batch size for training")
     parser.add_argument('--optimizer', type=str, default='auto', help="Optimizer for training")
     parser.add_argument('--patience', type=int, default=20, help="Early stopping patience")
     parser.add_argument('--cos_lr', type=bool, default=False, help="Use cosine learning rate scheduler")
