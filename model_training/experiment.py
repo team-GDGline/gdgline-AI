@@ -44,13 +44,14 @@ def resume_training(config):
 def continue_training(config):
     model = YOLO(config.get('model', 'yolo11n.pt'))
     additional_epochs = config.get('additional_epochs', 50)
+    print(config.get('device'))
     train_params = {
         'data': config.get('data'),
         'epochs': additional_epochs,
         'batch': config.get('batch', 16),
         'imgsz': config.get('imgsz', 640),
         'patience': config.get('patience', 100),
-        'device': config.get('device'),
+        'device': config.get('device', 'cpu'),
         'optimizer': config.get('optimizer', 'auto'),
         'seed': config.get('seed', 0),
         'pretrained': config.get('pretrained', True),
