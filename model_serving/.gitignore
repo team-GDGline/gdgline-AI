@@ -56,8 +56,8 @@ model/*
 model_store/*
 !model_store/.gitkeep
 
-datasetets/*
-!model_store/.gitkeep
+datasets/*
+!datasets/.gitkeep
 
 # Iamge filese
 *.jpg
@@ -67,3 +67,6 @@ datasetets/*
 *.bmp
 *.tiff
 *.webp
+
+*.script
+*.yaml

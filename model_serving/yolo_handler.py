@@ -4,29 +4,26 @@ import yaml
 import base64
 import cv2
 import numpy as np
-import json
 import os
 from ts.torch_handler.base_handler import BaseHandler
 
 class YOLOHandler(BaseHandler):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super(YOLOHandler, self).__init__()
         self.model = None
         self.class_names = []
 
     def initialize(self, context):
         try:
-            # TorchScript 모델 경로 설정
-            model_path = "best.torchscript"
+            model_dir = context.system_properties.get("model_dir", ".")
+            model_path = os.path.join(model_dir, "best.torchscript")
+            data_yaml_path = os.path.join(model_dir, "data.yaml")
             
             # TorchScript 모델 로드
             if not os.path.exists(model_path):
                 raise FileNotFoundError(f"Model file not found at: {model_path}")
             self.model = torch.jit.load(model_path)
             self.model.eval()
-            
-            # 데이터 설정 파일 경로
-            data_yaml_path = "data.yaml"
             
             # 클래스 이름 로드
             if not os.path.exists(data_yaml_path):
@@ -41,11 +38,12 @@ class YOLOHandler(BaseHandler):
         except Exception as e:
             raise RuntimeError(f"Failed to initialize model: {e}")
         
-    def preprocess(self, data):
+    def preprocess(self, data):     
         """
         Decode Base64 image and prepare tensor input.
         """
-        image_data = data[0].get("image")
+        body = data[0].get("body")
+        image_data = body.get("image")
         if not image_data:
             raise ValueError("'image' field is required in the request.")
         if image_data.startswith("data:image"):
@@ -76,46 +74,52 @@ class YOLOHandler(BaseHandler):
         conf_threshold=0.5
         iou_threshold=0.5
         
-        outputs = outputs[0]  # Assuming batch size of 1
-        boxes = outputs[:4, :].T  # Extract bounding boxes [N, 4]
-        scores = outputs[4:, :].T  # Extract class scores [N, num_classes]
+        outputs = outputs[0]  # 배치 차원 제거 (shape: [84, 8400])
+
+        # 바운딩 박스 좌표와 클래스 확률 분리
+        boxes = outputs[:4, :].transpose(0, 1)  # 첫 4개 값은 바운딩 박스 좌표 ([8400, 4])
+        class_scores = outputs[4:, :]  # 클래스 확률 ([80, 8400])
+
+        # 각 바운딩 박스에서 최고 확률의 클래스 ID 및 해당 확률 추출
+        class_confidences, class_labels = torch.max(class_scores, dim=0)
+        mask = class_confidences > conf_threshold  # 신뢰도 임계값 적용
         
-        # Find the best class for each box and its corresponding confidence score
-        class_scores, class_ids = torch.max(scores, dim=1)  # [N]
-        mask = class_scores > conf_threshold  # Filter by confidence threshold
-        
-        # Apply the mask to filter boxes, scores, and class IDs
-        filtered_boxes = boxes[mask]  # [M, 4]
-        filtered_scores = class_scores[mask]  # [M]
-        filtered_class_ids = class_ids[mask]  # [M]
-        
-        # Apply Non-Maximum Suppression (NMS)
+        # 필터링된 바운딩 박스 및 해당 클래스 정보
+        filtered_boxes = boxes[mask]
+        filtered_scores = class_confidences[mask]
+        filtered_labels = class_labels[mask]
+
+        # 비최대 억제 적용
         if filtered_boxes.size(0) > 0:
-            nms_indices = torchvision.ops.nms(filtered_boxes, filtered_scores, iou_threshold)
-            final_boxes = filtered_boxes[nms_indices]
-            final_scores = filtered_scores[nms_indices]
-            final_class_ids = filtered_class_ids[nms_indices]
-            
-            # Convert bounding boxes from center format to corner format (x_center, y_center, w, h → x1, y1, x2, y2)
-            final_boxes[:, 0] = final_boxes[:, 0] - final_boxes[:, 2] / 2  # x1
-            final_boxes[:, 1] = final_boxes[:, 1] - final_boxes[:, 3] / 2  # y1
-            final_boxes[:, 2] = final_boxes[:, 0] + final_boxes[:, 2]  # x2
-            final_boxes[:, 3] = final_boxes[:, 1] + final_boxes[:, 3]  # y2
+            indices = torchvision.ops.nms(filtered_boxes, filtered_scores, iou_threshold)
+            final_boxes = filtered_boxes[indices]
+            final_scores = filtered_scores[indices]
+            final_labels = filtered_labels[indices]
+
+            # 바운딩 박스 좌표 변환 (x_center, y_center, w, h → x1, y1, x2, y2)
+            final_boxes[:, 0] = final_boxes[:, 0] - final_boxes[:, 2] / 2  # x_center - width / 2
+            final_boxes[:, 1] = final_boxes[:, 1] - final_boxes[:, 3] / 2  # y_center - height / 2
+            final_boxes[:, 2] = final_boxes[:, 0] + final_boxes[:, 2]  # x_center + width / 2
+            final_boxes[:, 3] = final_boxes[:, 1] + final_boxes[:, 3]  # y_center + height / 2
+
             
             # Prepare the results
-            results = list(set([self.class_names[class_id.item()] for class_id in final_class_ids]))
+            results = list(set([self.class_names[class_id.item()] for class_id in final_labels]))
             
             return {"detections": results}
         else:
             return {"detections": []}
-
+        
     def handle(self, data, context):
-        """
-        Main handler entry point.
-        """
         try:
+            print(f"Received data: {data}")  # 입력 데이터 확인
             model_input = self.preprocess(data)
+            print(f"Preprocessed input: {model_input.shape}")  # 전처리 결과 확인
             model_output = self.inference(model_input)
-            return self.postprocess(model_output)
+            print(f"Model output: {model_output.shape}")  # 모델 출력 확인
+            result = self.postprocess(model_output)
+            print(f"Postprocess result: {result}")  # 후처리 결과 확인
+            return [result]
         except Exception as e:
-            return json.dumps({"error": str(e)})
+            print(f"Error in handle: {e}")  # 오류 내용 출력
+            return [{"error": str(e)}]
