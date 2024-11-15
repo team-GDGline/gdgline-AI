@@ -36,7 +36,6 @@ weights/
 # TorchServe model and config files
 /model_store/
 *.mar
-config.properties
 
 # Ignore virtual environments
 venv/
