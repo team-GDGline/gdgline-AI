@@ -173,3 +173,13 @@ pnnx*
 
 # calibration image
 calibration_*.npy
+
+
+# Iamge filese
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
