@@ -44,7 +44,6 @@ venv/
 env/
 
 # Ignore dataset storage and logs
-datasets/*
 logs/
 wandb/
 
@@ -54,6 +53,17 @@ wandb/
 model/*
 !model/.gitkeep
 
-datasets/*
-!datasets/.gitkeep
+model_store/*
+!model_store/.gitkeep
 
+datasetets/*
+!model_store/.gitkeep
+
+# Iamge filese
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
