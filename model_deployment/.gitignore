@@ -52,3 +52,12 @@ wandb/
 
 model/*
 !model/.gitkeep
+
+# Iamge filese
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
