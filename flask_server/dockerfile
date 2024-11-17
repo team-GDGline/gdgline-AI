@@ -1,0 +1,27 @@
+# 베이스 이미지로 Python 3.9 사용
+FROM python:3.9
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+USER root
+RUN chmod 777 -R .
+
+# 요구사항 파일을 복사하고 설치
+COPY app.py ./app.py
+COPY best.torchscript ./best.torchscript
+COPY data.yaml ./data.yaml
+COPY requirements.txt ./requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Flask 애플리케이션 실행
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=8080
+
+# 컨테이너에서 포트 5000을 외부에 노출
+EXPOSE 8080
+
+# Flask 서버 실행
+CMD ["flask", "run"]

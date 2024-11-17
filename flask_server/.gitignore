@@ -1,0 +1,62 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Unit test / coverage reports
+*.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.hypothesis/
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# VSCode project settings
+.vscode/
+
+# Neural Network weights
+weights/
+*.pt
+*.onnx
+*.h5
+
+# TorchServe model and config files
+/model_store/
+*.mar
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore dataset storage and logs
+datasets/*
+logs/
+wandb/
+
+# Ignore macOS files
+.DS_Store
+
+model/*
+!model/.gitkeep
+
+# Iamge filese
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
