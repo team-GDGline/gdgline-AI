@@ -1,0 +1,31 @@
+FROM pytorch/torchserve
+
+# 작업 디렉토리 생성
+WORKDIR /app
+
+USER root
+RUN chmod 777 -R .
+
+# 필요한 파일 복사
+COPY requirements.txt ./requirements.txt
+COPY scripts/ ./scripts/
+COPY model-store/ ./model-store/
+COPY config/config.properties ./config/config.properties
+COPY api_test.py ./api_test.py
+COPY stop_torchserve.py ./stop_torchserve.py
+
+# 의존성 설치
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN apt-get update
+RUN apt install zip unzip
+
+# 추가로 필요한 셸 스크립트 실행 권한 부여
+RUN chmod +x scripts/start_torchserve.sh scripts/stop_torchserve.sh
+
+# 포트 노출 (TorchServe 기본 포트)
+EXPOSE 8080
+EXPOSE 8081
+
+# TorchServe 실행
+CMD ["scripts/start_torchserve.sh"]
