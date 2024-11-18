@@ -45,10 +45,28 @@ class YOLOHandler(BaseHandler):
         if image_data.startswith("data:image"):
             image_data = image_data.split(",")[1]
         try:
+            # Base64 디코딩 및 이미지 로드
             img_bgr = cv2.imdecode(np.frombuffer(base64.b64decode(image_data), np.uint8), cv2.IMREAD_COLOR)
             img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-            img_resized = cv2.resize(img_rgb, (640, 640))
-            img_tensor = torch.from_numpy(img_resized).permute(2, 0, 1).float().unsqueeze(0) / 255.0
+
+            # 원본 이미지 크기
+            original_height, original_width = img_rgb.shape[:2]
+
+            # 패딩을 추가하여 비율 유지하면서 정사각형 만들기
+            scale = 640 / max(original_width, original_height)
+            resized_width = int(original_width * scale)
+            resized_height = int(original_height * scale)
+            resized_img = cv2.resize(img_rgb, (resized_width, resized_height))
+
+            # 패딩 계산
+            pad_x = (640 - resized_width) // 2
+            pad_y = (640 - resized_height) // 2
+
+            # 패딩 추가
+            padded_img = cv2.copyMakeBorder(resized_img, pad_y, 640 - resized_height - pad_y, pad_x, 640 - resized_width - pad_x, cv2.BORDER_CONSTANT, value=(114, 114, 114))
+
+            # 텐서로 변환 및 정규화
+            img_tensor = torch.from_numpy(padded_img).permute(2, 0, 1).float().unsqueeze(0) / 255.0
             return img_tensor
         except Exception as e:
             raise ValueError(f"Failed to process the image data: {e}")
